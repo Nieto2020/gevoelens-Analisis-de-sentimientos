@@ -1,7 +1,7 @@
 import re
 
 
-def analizar_sentimiento(comment):
+def limpieza(comment):
     if len(comment) > 5 and len(comment) <= 100:
         comment.lower()
         comment = re.sub(r"[-_?¿!¡,.#$%&/()']", " ", comment)

@@ -19,4 +19,4 @@ def scoring(list):
     elif score == 0:
         sentiment = "Neutral"
         
-    return sentiment
+    return sentiment, score
