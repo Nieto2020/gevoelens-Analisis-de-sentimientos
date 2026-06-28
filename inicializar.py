@@ -1,20 +1,54 @@
 import json
 import os
-import clean, score_sent
+import re
 from datetime import datetime
 
 ARCHIVO_DATA = "historial.json"
 
+#LISTAS
+POSITIVE_LIST = ["good", "nice", "awesome", "genius", "fun", "amazing"]
+NEGATIVE_LIST = ["bad", "horrible", "boring", "terrible", "awful", "shit"]
+
+
 def inicializar_json():
     if not os.path.exists(ARCHIVO_DATA):
         try:
-            with open(ARCHIVO_DATA, 'w', enconding='utf-8') as file:
+            with open(ARCHIVO_DATA, 'w', encoding='utf-8') as file:
                 json.dump([], file)
             print(f"[INFO] Archivo {ARCHIVO_DATA} creado exitosamente.")
         except IOError as e:
             print(f"[ERROR] No se pudo crear el archivo: {e}")
+ 
+ #Regresa un a lsta con palabras individuales
+
+def limpieza(comment):
+    if len(comment) > 5 and len(comment) <= 100:
+        comment.lower()
+        comment = re.sub(r"[-_?¿!¡,.#$%&/()']", " ", comment)
+        lcom = comment.split()
+        return lcom
+    else:
+        print("ERROR...Longitud no aceptada.")
             
-            
+def scoring(list):
+    positive_score = 0
+    negative_score = 0
+    score = 0
+    for word in list:
+        if word in POSITIVE_LIST:
+            positive_score += 1
+        elif word in NEGATIVE_LIST:
+            negative_score += 1
+    score = positive_score - negative_score
+    if score > 0:
+        sentiment = "Positive"
+    elif score < 0:
+        sentiment = "Negative"
+    elif score == 0:
+        sentiment = "Neutral"
+        
+    return sentiment, score
+
 def guardar_analisis(texto_original, sentiment, score):
     
     inicializar_json()
@@ -27,9 +61,6 @@ def guardar_analisis(texto_original, sentiment, score):
         
     nuevo_id = len(historial) + 1
     timestamp_actual = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    texto_limpio = clean.limpieza(texto_original)
-    sentiment, score = score_sent.analizar_sentimiento(texto_limpio)
-    
     
     nuevo_registro = {
         "id"         : nuevo_id,
