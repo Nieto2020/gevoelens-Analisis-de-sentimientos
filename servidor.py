@@ -1,11 +1,13 @@
-import http.server
-import socketserver
+from http.server import *
 
-PORT = 8080
+class GFG(BaseHTTPRequestHandler):
+    
+    def do_get(self):
+        self.send_response(200)
+        self.send_header('content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write('<h1>Example</h1>'.encode())
 
-Handler = http.server.SimpleHTTPRequestHandler
+port = HTTPServer(('', 8080), GFG)
 
-http = socketserver.TCPServer(("", PORT), Handler)
-
-print("serving at port", PORT)
-http.serve_forever()
+port.serve_forever()
