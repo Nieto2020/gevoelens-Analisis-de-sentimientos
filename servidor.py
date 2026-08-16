@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+import html
 import urllib.parse
 import json
 
@@ -27,14 +28,15 @@ class AnalizadorServer(BaseHTTPRequestHandler):
                 historial = json.load(file)
                 
             # 4. Generamos el bloque de texto HTML dinámicamente
+            #    html.escape(...) evita inyección XSS en texto del usuario
             filas_html = ""
             for registro in historial:
                 filas_html += f"""
                 <tr>
                     <td>{registro['id']}</td>
-                    <td>{registro['text_input']}</td>
-                    <td>{registro['sentiment']}</td>
-                    <td>{registro['timestamp']}</td>
+                    <td>{html.escape(registro['text_input'])}</td>
+                    <td>{html.escape(registro['sentiment'])}</td>
+                    <td>{html.escape(registro['timestamp'])}</td>
                 </tr>
                 """
                 
