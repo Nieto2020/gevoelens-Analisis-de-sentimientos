@@ -1,3 +1,11 @@
+"""Gevoelens - Análisis de sentimiento.
+
+Módulo único de lógica de negocio:
+- Limpieza y tokenización de texto (limpieza).
+- Clasificación de sentimiento por lexicón (scoring).
+- Persistencia del historial en JSON (inicializar_json, guardar_analisis).
+"""
+
 import json
 import os
 import re
@@ -5,7 +13,7 @@ from datetime import datetime
 
 ARCHIVO_DATA = "historial.json"
 
-#LISTAS
+# Lexicón de sentimiento (punto único de verdad)
 POSITIVE_LIST = ["good", "nice", "awesome", "genius", "fun", "amazing"]
 NEGATIVE_LIST = ["bad", "horrible", "boring", "terrible", "awful", "shit"]
 
@@ -19,20 +27,19 @@ def inicializar_json():
         except IOError as e:
             print(f"[ERROR] No se pudo crear el archivo: {e}")
  
- #Regresa un a lsta con palabras individuales
-
 def limpieza(comment):
+    """Normaliza el texto y devuelve una lista de palabras individuales."""
     if not isinstance(comment, str) or not (len(comment) > 5 and len(comment) <= 100):
         raise ValueError("Longitud no aceptada (debe tener entre 6 y 100 caracteres).")
     comment = comment.lower()
     comment = re.sub(r"[-_?¿!¡,.#$%&/()']", " ", comment)
     return comment.split()
-            
-def scoring(list):
+
+def scoring(palabras):
     positive_score = 0
     negative_score = 0
     score = 0
-    for word in list:
+    for word in palabras:
         if word in POSITIVE_LIST:
             positive_score += 1
         elif word in NEGATIVE_LIST:
@@ -42,9 +49,9 @@ def scoring(list):
         sentiment = "Positive"
     elif score < 0:
         sentiment = "Negative"
-    elif score == 0:
+    else:
         sentiment = "Neutral"
-        
+
     return sentiment, score
 
 def guardar_analisis(texto_original, sentiment, score):
@@ -73,6 +80,6 @@ def guardar_analisis(texto_original, sentiment, score):
     try:
         with open(ARCHIVO_DATA, 'w', encoding='utf-8') as file:
             json.dump(historial, file, indent=4, ensure_ascii=False)
-        print(f"[EXITO] Reegistro #{nuevo_id} guardado correctamente.")
+        print(f"[EXITO] Registro #{nuevo_id} guardado correctamente.")
     except IOError as e:
-        print(f"[ERROR] No se pudieron escribir los daros en el archivo: {e}")
+        print(f"[ERROR] No se pudieron escribir los datos en el archivo: {e}")
