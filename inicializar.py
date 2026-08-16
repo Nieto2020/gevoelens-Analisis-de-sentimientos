@@ -22,13 +22,11 @@ def inicializar_json():
  #Regresa un a lsta con palabras individuales
 
 def limpieza(comment):
-    if len(comment) > 5 and len(comment) <= 100:
-        comment.lower()
-        comment = re.sub(r"[-_?¿!¡,.#$%&/()']", " ", comment)
-        lcom = comment.split()
-        return lcom
-    else:
-        print("ERROR...Longitud no aceptada.")
+    if not isinstance(comment, str) or not (len(comment) > 5 and len(comment) <= 100):
+        raise ValueError("Longitud no aceptada (debe tener entre 6 y 100 caracteres).")
+    comment = comment.lower()
+    comment = re.sub(r"[-_?¿!¡,.#$%&/()']", " ", comment)
+    return comment.split()
             
 def scoring(list):
     positive_score = 0

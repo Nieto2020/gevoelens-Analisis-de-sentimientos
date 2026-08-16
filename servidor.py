@@ -1,10 +1,11 @@
-from http.server import *
+from http.server import BaseHTTPRequestHandler, HTTPServer
 import urllib.parse
 import json
 
 from inicializar import ARCHIVO_DATA, inicializador_json, limpieza, scoring, guardar_analisis
 
 PUERTO = 8080
+PLACEHOLDER_FILAS = "<!-- FILAS -->"
 
 class AnalizadorServer(BaseHTTPRequestHandler):
     
@@ -37,11 +38,11 @@ class AnalizadorServer(BaseHTTPRequestHandler):
                 </tr>
                 """
                 
-            # 5. REEMPLAZAMOS puntaje de anclaje con las filas reales
-            html_final = html_contenido.replace('', filas_html)
+            # 5. REEMPLAZAMOS el ancla con las filas reales
+            html_final = html_contenido.replace(PLACEHOLDER_FILAS, filas_html)
             
             # 6. Enviamos el HTML final modificado al navegador
-            self.write(html_final.encode('utf-8'))
+            self.wfile.write(html_final.encode('utf-8'))
         
         else:
             # Si intentan entrar a otra ruta (ej. /secreta), mandamos un 404 Not Found
@@ -54,20 +55,23 @@ class AnalizadorServer(BaseHTTPRequestHandler):
             longitud_datos = int(self.headers['Content-Length'])
             # 2. Leemos esos bytes crudos del flujo de entrada
             datos_crudos = self.rfile.read(longitud_datos).decode('utf-8')
-            # 3. Decodificmos el formato del forulario (comentario=Texto+Ingresado)
+            # 3. Decodificamos el formato del formulario (comentario=Texto+Ingresado)
             datos_parseados = urllib.parse.parse_qs(datos_crudos)
-            # Obtenemos el valor de la llave 'comentario que definimos en el HTML
-            texto_usuario = datos_parseados['comentario'[0]]
+            # Obtenemos el valor de la llave 'comentario' que definimos en el HTML
+            texto_usuario = datos_parseados['comentario'][0]
             # 4. LOGICA
-            list = limpieza(texto_usuario)
-            sentiment, score = scoring(list)
-            # 5. Guardar analisis
-            guardar_analisis(texto_usuario, score, sentiment)
+            try:
+                palabras = limpieza(texto_usuario)
+                sentiment, score = scoring(palabras)
+                # 5. Guardar analisis
+                guardar_analisis(texto_usuario, sentiment, score)
+            except (ValueError, KeyError) as e:
+                print(f"[ERROR] No se pudo analizar el comentario: {e}")
             
-            # 6. Redirección (HTTP 303): DEcimos al navegador que regrese a la raíz con un GET
+            # 6. Redirección (HTTP 303): Decimos al navegador que regrese a la raíz con un GET
             self.send_response(303)
             self.send_header('Location', '/')
-            self.send_headers()
+            self.end_headers()
             
 # --- ARRANQUE DEL SERVIDOR ---
 if __name__ == '__main__':
@@ -76,9 +80,5 @@ if __name__ == '__main__':
     try:
         servidor.serve_forever()
     except KeyboardInterrupt:
-        print("n\[SERVIDOR DETENIDO] Apagando el sistema elgantemente.")
+        print("[SERVIDOR DETENIDO] Apagando el sistema elegantemente.")
         servidor.server_close()
-
-port = HTTPServer(('', 8080), GFG)
-
-port.serve_forever()
